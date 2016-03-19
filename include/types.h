@@ -231,6 +231,7 @@ struct allele {
 struct discovered_allele_info {
     bool is_ref;
     float copy_number;
+    uint64_t read_depth;
 
     bool operator==(const discovered_allele_info& rhs) const noexcept { return is_ref == rhs.is_ref && copy_number == rhs.copy_number; }
 

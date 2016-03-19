@@ -31,8 +31,9 @@ truth_discovered_alleles:
       dna: 'TA'
       is_ref: true
       copy_number: 1
+      read_depth: 10
     - range: {ref: '22', beg: 10009464, end: 10009465}
       dna: 'T'
       is_ref: false
       copy_number: 1
-
+      read_depth: 2

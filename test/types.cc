@@ -87,10 +87,12 @@ TEST_CASE("discovered_alleles_of_yaml") {
   dna: A
   is_ref: true
   copy_number: 100
+  read_depth: 1000
 - range: {ref: '17', beg: 100, end: 100}
   dna: G
   is_ref: false
   copy_number: 10.5
+  read_depth: 100
 )";
 
     #define VERIFY_DA(dal) \
@@ -98,9 +100,11 @@ TEST_CASE("discovered_alleles_of_yaml") {
         REQUIRE((dal).find(allele(range(1, 99, 100),"A")) != (dal).end()); \
         REQUIRE((dal)[allele(range(1, 99, 100),"A")].is_ref == true); \
         REQUIRE((dal)[allele(range(1, 99, 100),"A")].copy_number == 100); \
+        REQUIRE((dal)[allele(range(1, 99, 100),"A")].read_depth == 1000); \
         REQUIRE((dal).find(allele(range(1, 99, 100),"G")) != (dal).end()); \
         REQUIRE((dal)[allele(range(1, 99, 100),"G")].is_ref == false); \
-        REQUIRE((dal)[allele(range(1, 99, 100),"G")].copy_number == 10.5);
+        REQUIRE((dal)[allele(range(1, 99, 100),"G")].copy_number == 10.5); \
+        REQUIRE((dal)[allele(range(1, 99, 100),"G")].read_depth == 100);
 
     SECTION("basic") {
         YAML::Node n = YAML::Load(da_yaml);
@@ -117,10 +121,12 @@ TEST_CASE("discovered_alleles_of_yaml") {
   dna: A
   is_ref: true
   copy_number: 100
+  read_depth: 1000
 - range: {ref: 'bogus', beg: 100, end: 100}
   dna: G
   is_ref: false
   copy_number: 10.5
+  read_depth: 100
 )");
 
         discovered_alleles dal;
@@ -131,6 +137,7 @@ TEST_CASE("discovered_alleles_of_yaml") {
 - dna: A
   is_ref: true
   copy_number: 100
+  read_depth: 1000
 )");
 
         s = discovered_alleles_of_yaml(n, contigs, dal);
@@ -141,6 +148,7 @@ TEST_CASE("discovered_alleles_of_yaml") {
   dna: A
   is_ref: true
   copy_number: 100
+  read_depth: 1000
 )");
 
         s = discovered_alleles_of_yaml(n, contigs, dal);
@@ -153,10 +161,12 @@ TEST_CASE("discovered_alleles_of_yaml") {
   dna: A
   is_ref: true
   copy_number: 100
+  read_depth: 1000
 - range: {ref: '17', beg: 100, end: 100}
   dna: BOGUS
   is_ref: false
   copy_number: 10.5
+  read_depth: 100
 )");
 
         discovered_alleles dal;
@@ -170,10 +180,31 @@ TEST_CASE("discovered_alleles_of_yaml") {
   dna: A
   is_ref: true
   copy_number: 100
+  read_depth: 1000
 - range: {ref: '17', beg: 100, end: 100}
   dna: G
   is_ref: false
   copy_number: [x]
+  read_depth: 100
+)");
+
+        discovered_alleles dal;
+        Status s = discovered_alleles_of_yaml(n, contigs, dal);
+        REQUIRE(s.bad());
+    }
+
+    SECTION("bogus read_depth") {
+        YAML::Node n = YAML::Load(1 + R"(
+- range: {ref: '17', beg: 100, end: 100}
+  dna: A
+  is_ref: true
+  copy_number: 100
+  read_depth: 1000
+- range: {ref: '17', beg: 100, end: 100}
+  dna: G
+  is_ref: false
+  copy_number: 10.5
+  read_depth: -1
 )");
 
         discovered_alleles dal;
@@ -202,10 +233,12 @@ TEST_CASE("yaml_of_discovered_alleles") {
   dna: A
   is_ref: true
   copy_number: 100
+  read_depth: 1000
 - range: {ref: '17', beg: 100, end: 100}
   dna: G
   is_ref: false
   copy_number: 10.5
+  read_depth: 100
 )";
 
         YAML::Node n = YAML::Load(da_yaml);

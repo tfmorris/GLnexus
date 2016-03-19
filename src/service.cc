@@ -88,10 +88,12 @@ static Status discover_alleles_thread(const set<string>& samples,
                 continue;
             }
 
-            vector<float> obs_counts(record->n_allele, 0.0);
+            vector<float> copy_number(record->n_allele, 0.0);
+            vector<uint64_t> read_depth(record->n_allele, 0U);
 
-            // count allele depth for desired samples
+            // count copy number and read depth for desired samples
             // TODO: "max ref extension" distance for each allele
+
             int *gt = nullptr, gtsz = 0;
             int ngt = bcf_get_genotypes(dataset_header.get(), record.get(), &gt, &gtsz);
             assert(ngt == 2*dataset_nsamples);
@@ -100,12 +102,19 @@ static Status discover_alleles_thread(const set<string>& samples,
                     int al_i = bcf_gt_allele(gt[i]);
                     if (al_i >= 0 && al_i < record->n_allele
                         && dataset_sample_relevant.at(i/2)) {
-                        obs_counts[al_i] += 1.0;
+                        copy_number[al_i] += 1.0;
                     }
                 }
             }
-            if (gt) {
-                free(gt);
+            free(gt);
+
+            S(adh.Load(dataset, dataset_header.get(), record.get()));
+            for (unsigned i = 0; i < dataset_nsamples; i++) {
+                if (dataset_sample_relevant[i]) {
+                    for (unsigned j = 0; j < record->n_allele; j++) {
+                        read_depth[j] += adh.depth(i, j);
+                    }
+                }
             }
 
             // FIXME -- minor potential bug -- double-counting observations of
@@ -115,11 +124,11 @@ static Status discover_alleles_thread(const set<string>& samples,
             // In particular this excludes gVCF <NON_REF> symbolic alleles
             bool any_alt = false;
             for (int i = 1; i < record->n_allele; i++) {
-                if (obs_counts[i] > 0.0) { // TODO: threshold for soft estimates
+                if (copy_number[i] > 0.0) {
                     string aldna(record->d.allele[i]);
                     transform(aldna.begin(), aldna.end(), aldna.begin(), ::toupper);
                     if (aldna.size() > 0 && regex_match(aldna, regex_dna)) {
-                        discovered_allele_info ai = { false, obs_counts[i] };
+                        discovered_allele_info ai = { false, copy_number[i], read_depth[i] };
                         dsals.insert(make_pair(allele(rng, aldna), ai));
                         any_alt = true;
                     }
@@ -131,7 +140,7 @@ static Status discover_alleles_thread(const set<string>& samples,
             transform(refdna.begin(), refdna.end(), refdna.begin(), ::toupper);
             if (refdna.size() > 0 && regex_match(refdna, regex_dna)) {
                 if (any_alt) {
-                    discovered_allele_info ai = { true, obs_counts[0] };
+                    discovered_allele_info ai = { true, copy_number[0], read_depth[0] };
                     dsals.insert(make_pair(allele(rng, refdna), ai));
                 }
             } else {

@@ -11,7 +11,7 @@ regex regex_dna     ("[ACGTN]+")
     ;
 
 // Add src alleles to dest alleles. Identical alleles alleles are merged,
-// using the sum of their copy_numbers
+// using the sum of their copy_numbers and read_depths
 Status merge_discovered_alleles(const discovered_alleles& src, discovered_alleles& dest) {
     for (auto& dsal : src) {
         UNPAIR(dsal,allele,ai)
@@ -23,6 +23,7 @@ Status merge_discovered_alleles(const discovered_alleles& src, discovered_allele
                 return Status::Invalid("allele appears as both REF and ALT", allele.dna + "@" + allele.pos.str());
             }
             p->second.copy_number += ai.copy_number;
+            p->second.read_depth += ai.read_depth;
         }
     }
 
@@ -120,6 +121,8 @@ Status yaml_of_discovered_alleles(const discovered_alleles& dal,
             << YAML::Value << p.second.is_ref;
         out << YAML::Key << "copy_number"
             << YAML::Value << p.second.copy_number;
+        out << YAML::Key << "read_depth"
+            << YAML::Value << p.second.read_depth;
 
         out << YAML::EndMap;
     }
@@ -161,6 +164,12 @@ Status discovered_alleles_of_yaml(const YAML::Node& yaml,
         VR(n_copy_number && n_copy_number.IsScalar(), "missing/invalid 'copy_number' field in entry");
         ai.copy_number = n_copy_number.as<float>();
         VR(std::isfinite(ai.copy_number) && !std::isnan(ai.copy_number), "invalid 'copy_number' field in entry");
+
+        const auto n_read_depth = (*p)["read_depth"];
+        VR(n_read_depth && n_read_depth.IsScalar(), "missing/invalid 'read_depth' field in entry");
+        int read_depth = n_read_depth.as<int64_t>();
+        VR(read_depth >= 0, "invalid 'read_depth' field in entry");
+        ai.read_depth = (uint64_t) read_depth;
 
         VR(ans.find(al) == ans.end(), "duplicate alleles");
         ans[al] = ai;
