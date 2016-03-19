@@ -6,6 +6,7 @@
 #include <fstream>
 #include <memory>
 #include "residuals.h"
+#include "BCFHelpers.h"
 
 namespace GLnexus {
 

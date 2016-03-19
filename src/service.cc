@@ -61,6 +61,7 @@ static Status discover_alleles_thread(const set<string>& samples,
     string dataset;
     shared_ptr<const bcf_hdr_t> dataset_header;
     vector<shared_ptr<bcf1_t>> records;
+    AlleleDepthHelper adh;
     while ((s = iterator.next(dataset, dataset_header, records)).ok()) {
         discovered_alleles dsals;
         // determine which of the dataset's samples are in the desired sample set
@@ -89,8 +90,7 @@ static Status discover_alleles_thread(const set<string>& samples,
 
             vector<float> obs_counts(record->n_allele, 0.0);
 
-            // count hard-called alt allele observations for desired samples
-            // TODO: could use GLs for soft estimate
+            // count allele depth for desired samples
             // TODO: "max ref extension" distance for each allele
             int *gt = nullptr, gtsz = 0;
             int ngt = bcf_get_genotypes(dataset_header.get(), record.get(), &gt, &gtsz);
