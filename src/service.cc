@@ -428,9 +428,15 @@ Status Service::genotype_sites(const genotyper_config& cfg, const string& sample
     // We assume that by virtue of preallocating, no mutex is necessary to
     // use it as follows because writes and reads of individual elements are
     // serialized by the futures.
+    atomic<size_t> results_retrieved(0);
     atomic<bool> abort(false);
     for (size_t i = 0; i < sites.size(); i++) {
         auto fut = body_->threadpool_.push([&, i](int tid){
+            while (i > results_retrieved+body_->cfg_.threads) {
+                // don't allow the results retrieval, below, to fall too far
+                // behind results generation
+                std::this_thread::yield();
+            }
             if (abort || (ext_abort && *ext_abort)) {
                 abort = true;
                 return Status::Aborted();
@@ -488,6 +494,7 @@ Status Service::genotype_sites(const genotyper_config& cfg, const string& sample
             s = move(s_i);
             abort = true;
         }
+        results_retrieved++;
     }
     if (s.bad()) {
         return s;
