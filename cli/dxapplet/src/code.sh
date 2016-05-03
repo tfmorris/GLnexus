@@ -6,6 +6,11 @@ function join { local IFS="$1"; shift; echo "$*"; }
 main() {
     set -ex -o pipefail
 
+    # improves interaction between jemalloc and Linux "transparent huge pages"
+    # https://github.com/jemalloc/jemalloc/issues/243
+    # https://github.com/jemalloc/jemalloc/issues/140
+    export MALLOC_CONF=lg_chunk:21
+
     # parameters for performance recording
     recordFreq=99
 
