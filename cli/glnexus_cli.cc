@@ -505,13 +505,6 @@ genotyper_config:
       combi_method: min
       number: basic
       count: 1
-    - orig_names: [SB]
-      name: SB
-      description: '##FORMAT=<ID=SB,Number=4,Type=Integer,Description=\"Per-sample component statistics which comprise the Fishers Exact Test to detect strand bias.\">'
-      type: int
-      combi_method: max
-      number: basic
-      count: 4
     - orig_names: [GQ]
       name: GQ
       description: '##FORMAT=<ID=GQ,Number=1,Type=Integer,Description=\"Genotype Quality\">'
@@ -527,6 +520,13 @@ genotyper_config:
       combi_method: min
       default_to_zero: true
       count: 0
+    - orig_names: [SB]
+      name: SB
+      description: '##FORMAT=<ID=SB,Number=4,Type=Integer,Description=\"Per-sample component statistics which comprise the Fishers Exact Test to detect strand bias.\">'
+      type: int
+      combi_method: max
+      number: basic
+      count: 4
 )eof";
 
 GLnexus::Status load_config_preset(const std::string& name,

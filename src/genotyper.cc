@@ -1043,11 +1043,6 @@ Status genotype_site(const genotyper_config& cfg, MetadataCache& cache, BCFData&
         return Status::Failure("bcf_update_genotypes");
     }
 
-    // Lifted-over FORMAT fields (non-genotype based)
-    for (auto& format_helper : format_helpers) {
-        S(format_helper->update_record_format(hdr, ans.get()));
-    }
-
     // RNC
     vector<const char*> rnc;
     for (const auto& c : genotypes) {
@@ -1069,6 +1064,11 @@ Status genotype_site(const genotyper_config& cfg, MetadataCache& cache, BCFData&
     assert (gt.size() == rnc.size());
     if (bcf_update_format_string(hdr, ans.get(), "RNC", rnc.data(), rnc.size()) != 0) {
         return Status::Failure("bcf_update_format_string RNC");
+    }
+
+    // Lifted-over FORMAT fields (non-genotype based)
+    for (auto& format_helper : format_helpers) {
+        S(format_helper->update_record_format(hdr, ans.get()));
     }
 
     // Finalize loss statistics for this site
