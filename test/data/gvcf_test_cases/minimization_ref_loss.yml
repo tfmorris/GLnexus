@@ -1,0 +1,70 @@
+readme: |
+  Test for a case where we unnecessarily lost a ref call due to unifier allele minimization.
+  
+  The CG ALT allele in sample A needs to be unified into both sites, as ALT C and REF G.  
+
+input:
+  header: |-
+      ##fileformat=VCFv4.1
+      ##FILTER=<ID=PASS,Description="All filters passed">
+      ##ALT=<ID=NON_REF,Description="Represents any possible alternative allele at this location">
+      ##FILTER=<ID=LowQual,Description="Low quality">
+      ##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">
+      ##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth (reads with MQ=255 or with bad mates are filtered)">
+      ##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">
+      ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+      ##FORMAT=<ID=MIN_DP,Number=1,Type=Integer,Description="Minimum DP observed within the GVCF block">
+      ##FORMAT=<ID=PGT,Number=1,Type=String,Description="Physical phasing haplotype information, describing how the alternate alleles are phased in relation to one another">
+      ##FORMAT=<ID=PID,Number=1,Type=String,Description="Physical phasing ID information, where each unique ID within a given sample (but not across samples) connects records within a phasing group">
+      ##FORMAT=<ID=PL,Number=G,Type=Integer,Description="Normalized, Phred-scaled likelihoods for genotypes as defined in the VCF specification">
+      ##FORMAT=<ID=SB,Number=4,Type=Integer,Description="Per-sample component statistics which comprise the Fisher's Exact Test to detect strand">
+      ##INFO=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth; some reads may have been filtered">
+      ##INFO=<ID=END,Number=1,Type=Integer,Description="Stop position of the interval">
+      ##contig=<ID=A,length=100000000>
+      #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT
+  body:
+    - A.gvcf.gz: |
+        A
+        A	43504228	.	TG	T,CG,<NON_REF>	1011.73	.	.	GT:AD:DP:GQ:PL:SB	0/2:28,2,36,0:66:99:1049,1160,2357,0,763,829,1139,1988,796,1945:16,12,25,11
+    - B.gvcf.gz: |
+        B
+        A	43504220	.	A	<NON_REF>	.	.	END=43504228	GT:DP:GQ:MIN_DP:PL	0/0:13:0:13:0,0,342
+        A	43504229	.	G	A,<NON_REF>	111.38	.	.	GT:AD:DP:GQ:PL:SB	0/1:103,15,0:118:99:232,0,3603,542,3649,4191:64,39,11,4
+
+truth_unified_sites:
+  - range: {ref: A, beg: 43504228, end: 43504228}
+    alleles: [T, C]
+    copy_number: [0, 1]
+    unification:
+      - range: {beg: 43504228, end: 43504229}
+        alt: TG
+        to: 0
+      - range: {beg: 43504228, end: 43504229}
+        alt: CG
+        to: 1
+  - range: {ref: A, beg: 43504229, end: 43504229}
+    alleles: [G, A]
+    copy_number: [0, 1]
+    unification:
+      - range: {beg: 43504228, end: 43504229}
+        alt: TG
+        to: 0
+      - range: {beg: 43504229, end: 43504229}
+        alt: G
+        to: 0
+      - range: {beg: 43504229, end: 43504229}
+        alt: A
+        to: 1
+
+truth_output_vcf: 
+  - truth.vcf: |
+      ##fileformat=VCFv4.2
+      ##FILTER=<ID=PASS,Description="All filters passed">
+      ##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">
+      ##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth (reads with MQ=255 or with bad mates are filtered)">
+      ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+      ##FORMAT=<ID=RNC,Number=G,Type=Character,Description="Reason for No Call in GT: . = n/a, M = Missing data, P = Partial data, D = insufficient Depth of coverage, - = unrepresentable overlapping deletion, L = Lost/unrepresentable allele (other than deletion), U = multiple Unphased variants present, O = multiple Overlapping variants present">
+      ##contig=<ID=A,length=100000000>
+      #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	A	B
+      21	43504228	.	T	C	0	.	.	GT:DP:GQ:AD:RNC 0/0:66:99:28,0:..	0/0:66:99:28,0:..
+      21	43504229	.	G	A	0	.	.	GT:DP:GQ:AD:RNC 0/0:66:99:28,0:..	0/1:66:99:28,0:..
