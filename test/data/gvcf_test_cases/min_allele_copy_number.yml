@@ -40,19 +40,19 @@ input:
         21	10009466	.	T	G,<NON_REF>	.	.	.	GT:AD:DP:GQ:PL:SB	0/1:10,2,0:12:2:2,0,240,46,246,292:1,9,1,1
 
 unifier_config:
-  min_allele_copy_number: 0.9
+  min_allele_copy_number: 0.03
 
 truth_unified_sites:
     - range: {ref: "21", beg: 10009461, end: 10009461}
       alleles: [T, A]
-      copy_number: [0, 1.2262]
+      copy_number: [0, 0.0312]
       unification:
         - range: {beg: 10009461, end: 10009461}
           alt: A
           to: 1
     - range: {ref: "21", beg: 10009465, end: 10009465}
       alleles: [A, C]
-      copy_number: [0, 1.2262]
+      copy_number: [0, 0.0312]
       unification:
         - range: {beg: 10009464, end: 10009465}
           alt: TC
@@ -62,7 +62,7 @@ truth_unified_sites:
           to: 1
     - range: {ref: 21, beg: 10009466, end: 10009466}
       alleles: [T, A]
-      copy_number: [0, 0.9755]
+      copy_number: [0, 0.2847]
       unification:
         - range: {beg: 10009466, end: 10009466}
           alt: A

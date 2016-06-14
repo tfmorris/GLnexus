@@ -93,7 +93,7 @@ static Status discover_alleles_thread(const set<string>& samples,
             // calculate estimated allele copy numbers for this record
             // TODO: configurable bias00
             // TODO: ideally we'd compute them only for relevant samples
-            S(diploid::estimate_allele_copy_number(dataset_header.get(), record.get(), 1.0, copy_number));
+            S(diploid::estimate_allele_copy_number(dataset_header.get(), record.get(), 100.0, copy_number));
             #define round4(x) (float(round(x*10000.0)/10000.0))
 
             // FIXME -- minor potential bug -- double-counting copy number of

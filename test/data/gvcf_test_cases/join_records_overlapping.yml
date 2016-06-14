@@ -39,10 +39,13 @@ input:
         A	907971	.	C	A,<NON_REF>	468.22	.	.	GT:AD:DP:GQ:PL:SB	0/1:3,24,0:27:4:496,0,4,505,75,580:0,3,4,20
         A	907972	.	A	<NON_REF>	.	.	END=7907972	GT:DP:GQ:MIN_DP:PL	0/0:32:0:32:0,0,996
 
+unifier_config:
+  min_allele_copy_number: 0.01
+
 truth_unified_sites:
     - range: {ref: A, beg: 907970, end: 907971}
       alleles: [AC, AA, A]
-      copy_number: [0, 3.2847, 0.7153]
+      copy_number: [0, 3.2847, 0.0245]
       unification:
         - range: {beg: 907971, end: 907971}
           alt: A
