@@ -11,25 +11,6 @@ namespace KeyValue {
 
 using CollectionHandle = void*;
 
-// A read-only slice of data in-memory, passed around to avoid copying.
-struct Data {
-    const char* data = nullptr;
-    const size_t size = 0;
-
-    Data(const char* data_, size_t size_) : data(data_), size(size_) {}
-    Data(const char* cstr) : data(cstr), size(strlen(cstr)) {}
-    Data(const std::string& s) : data(s.data()), size(s.size()) {}
-    virtual ~Data() = default;
-
-    std::string str() const {
-        if (data) {
-            return std::string(data, size);
-        } else {
-            return std::string();
-        }
-    };
-};
-
 /// In-order iterator over records in a collection. Not thread-safe.
 class Iterator {
 public:
@@ -40,11 +21,17 @@ public:
 
     // If valid(), get the current key. The resulting buffer shall remain
     // available until next() is invoked or the iterator is destroyed.
-    virtual Data key() const = 0;
+    virtual std::pair<const char*, size_t> key() const = 0;
+
+    // If valid(), get the current key as a std::string (likely copying it)
+    virtual std::string key_str() const {
+        auto p = key();
+        return std::string(p.first, p.second);
+    }
 
     // If valid(), get the current value. The resulting buffer shall remain
     // available until next() is invoked or the iterator is destroyed.
-    virtual Data value() const = 0;
+    virtual std::pair<const char*, size_t> value() const = 0;
 
     // Advance the iterator to the next key/value pair. At the end of the
     // collection, next() will return OK, but valid() will be false.
@@ -61,22 +48,8 @@ public:
     virtual ~Reader() = default;
 
     /// Get the value corresponding to the key and return OK. Return NotFound
-    /// if no corresponding record exists in the collection, or any error code.
-    /// The output buffer will remain available at least until the shared_ptr
-    /// is released.
-    virtual Status get0(CollectionHandle coll, const std::string& key,
-                        std::shared_ptr<Data>& value) const = 0;
-
-    // get and copy the value into a std::string
-    virtual Status get(CollectionHandle coll, const std::string& key,
-                       std::string& value) const {
-        std::shared_ptr<Data> v;
-        Status s = get0(coll, key, v);
-        if (s.ok()) {
-            value = v->str();
-        }
-        return s;
-    }
+    /// if no corresponding record exists in the collection, or any error code
+    virtual Status get(CollectionHandle coll, const std::string& key, std::string& value) const = 0;
 
     /// Create an iterator positioned at the first key equal to or greater
     /// than the given one. If key is empty then position at the beginning of
@@ -94,7 +67,7 @@ class WriteBatch {
 public:
     virtual ~WriteBatch() = default;
 
-    virtual Status put(CollectionHandle coll, const std::string& key, const Data& value) = 0;
+    virtual Status put(CollectionHandle coll, const std::string& key, const std::string& value) = 0;
     //virtual Status delete(Collection* coll, const std::string& key) = 0;
 
     /// Apply a batch of writes.
@@ -128,9 +101,9 @@ public:
     // create a snapshot just to read one record (or begin one iterator), or
     // apply a "batch" of one write. Derived classes may want to provide more
     // efficient overrides.
-    Status get0(CollectionHandle coll, const std::string& key, std::shared_ptr<Data>& value) const override;
+    Status get(CollectionHandle coll, const std::string& key, std::string& value) const override;
     Status iterator(CollectionHandle coll, const std::string& key, std::unique_ptr<Iterator>& it) const override;
-    virtual Status put(CollectionHandle coll, const std::string& key, const Data& value);
+    virtual Status put(CollectionHandle coll, const std::string& key, const std::string& value);
 
     /// Ensure all writes are flushed to storage
     virtual Status flush() = 0;
