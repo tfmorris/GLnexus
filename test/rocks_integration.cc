@@ -83,12 +83,6 @@ TEST_CASE("RocksDB open/initialize states") {
     v.clear();
     REQUIRE(db->get(coll, "foo", v).ok());
     REQUIRE(v == "bar");
-    std::unique_ptr<KeyValue::Reader> snapshot;
-    REQUIRE(db->current(snapshot).ok());
-    std::shared_ptr<KeyValue::Data> v2;
-    REQUIRE(snapshot->get0(coll, "foo", v2).ok());
-    REQUIRE(v2->str() == "bar");
-    v2.reset();
     REQUIRE(db->put(coll, "foo", "bar").bad());
     REQUIRE(db->put(coll, "bar", "baz").bad());
     db.reset();
