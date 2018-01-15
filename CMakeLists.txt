@@ -203,8 +203,7 @@ add_library(glnexus
             include/discovery.h src/discovery.cc
             include/unifier.h src/unifier.cc
             include/genotyper.h src/genotyper.cc
-            src/genotyper_utils.h
-            src/BCFKeyValueData_utils.h
+            include/genotyper_utils.h
             include/residuals.h src/residuals.cc
             include/KeyValue.h src/KeyValue.cc
             include/BCFSerialize.h src/BCFSerialize.cc
